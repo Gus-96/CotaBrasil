@@ -1,3 +1,5 @@
+<img width="1210" height="648" alt="CotaBrasil" src="https://github.com/user-attachments/assets/728bace4-df1b-41e5-bfb9-f9a62971c31e" />
+
 # CotaBrasil - Monitoramento Financeiro em Tempo Real
 
 O CotaBrasil é uma solução tecnológica completa desenvolvida para acompanhamento em tempo real dos principais indicadores financeiros que impactam o mercado brasileiro e internacional. Este projeto full-stack combina um frontend moderno em React com um backend robusto em Node.js, oferecendo aos usuários uma visão abrangente e atualizada do cenário econômico.
@@ -34,7 +36,6 @@ Backend
 - CORS
 - Axios
 - Yahoo Finance API
-- Ready for production deployment
 
 ## Roadmap
 - Integração com APIs financeiras (Done)
