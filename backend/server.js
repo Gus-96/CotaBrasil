@@ -3,6 +3,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const path = require('path');
 const axios = require('axios');
+const fs = require('fs'); // Importação adicionada para verificação de arquivos
 
 const app = express();
 
@@ -44,6 +45,36 @@ app.get('/api/ibovespa', async (req, res) => {
     });
   }
 });
+
+// Configuração para produção - SERVIÇO NO RENDER
+if (process.env.NODE_ENV === 'production') {
+  // Caminhos possíveis para o frontend (Render e local)
+  const possiblePaths = [
+    path.join(__dirname, 'frontend', 'dist'),       // Estrutura no Render
+    path.join(__dirname, '..', 'frontend', 'dist'), // Estrutura local
+    path.join(__dirname, '..', 'dist')              // Alternativa comum
+  ];
+
+  let frontendServed = false;
+
+  // Tenta encontrar a pasta do frontend
+  possiblePaths.forEach(frontendPath => {
+    if (!frontendServed && fs.existsSync(frontendPath)) {
+      app.use(express.static(frontendPath));
+      app.get('*', (req, res) => {
+        res.sendFile(path.join(frontendPath, 'index.html'));
+      });
+      console.log(`Frontend servido de: ${frontendPath}`);
+      frontendServed = true;
+    }
+  });
+
+  if (!frontendServed) {
+    console.warn('AVISO: Pasta do frontend não encontrada em nenhum dos locais:',
+      possiblePaths.map(p => `\n- ${p}`).join('')
+    );
+  }
+}
 
 // Tratamento de erros global
 app.use((err, req, res, next) => {
