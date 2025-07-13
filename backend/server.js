@@ -3,7 +3,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const path = require('path');
 const axios = require('axios');
-const fs = require('fs'); // Importação adicionada para verificação de arquivos
+const fs = require('fs');
 
 const app = express();
 
@@ -12,11 +12,17 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Rota para IBOVESPA (Yahoo Finance)
+// Rota para IBOVESPA (Yahoo Finance) - VERSÃO ORIGINAL FUNCIONAL
 app.get('/api/ibovespa', async (req, res) => {
   try {
     const response = await axios.get(
-      'https://query1.finance.yahoo.com/v8/finance/chart/^BVSP?interval=1d'
+      'https://query1.finance.yahoo.com/v8/finance/chart/^BVSP?interval=1d',
+      {
+        headers: {
+          'User-Agent': 'Mozilla/5.0', // Adiciona header para evitar bloqueio
+          'Accept': 'application/json'
+        }
+      }
     );
 
     const data = response.data.chart.result[0];
@@ -46,33 +52,28 @@ app.get('/api/ibovespa', async (req, res) => {
   }
 });
 
-// Configuração para produção - SERVIÇO NO RENDER
+// CONFIGURAÇÃO PARA O RENDER (SEM MODIFICAR O COMPORTAMENTO LOCAL)
 if (process.env.NODE_ENV === 'production') {
-  // Caminhos possíveis para o frontend (Render e local)
-  const possiblePaths = [
-    path.join(__dirname, 'frontend', 'dist'),       // Estrutura no Render
-    path.join(__dirname, '..', 'frontend', 'dist'), // Estrutura local
-    path.join(__dirname, '..', 'dist')              // Alternativa comum
+  const frontendPaths = [
+    path.join(__dirname, 'frontend', 'dist'),      // Caminho Render
+    path.join(__dirname, '..', 'frontend', 'dist') // Caminho local
   ];
 
   let frontendServed = false;
-
-  // Tenta encontrar a pasta do frontend
-  possiblePaths.forEach(frontendPath => {
+  
+  for (const frontendPath of frontendPaths) {
     if (!frontendServed && fs.existsSync(frontendPath)) {
       app.use(express.static(frontendPath));
       app.get('*', (req, res) => {
         res.sendFile(path.join(frontendPath, 'index.html'));
       });
-      console.log(`Frontend servido de: ${frontendPath}`);
+      console.log(`[RENDER] Frontend servido de: ${frontendPath}`);
       frontendServed = true;
     }
-  });
+  }
 
   if (!frontendServed) {
-    console.warn('AVISO: Pasta do frontend não encontrada em nenhum dos locais:',
-      possiblePaths.map(p => `\n- ${p}`).join('')
-    );
+    console.warn('[RENDER] Aviso: Frontend não encontrado. Servindo apenas API.');
   }
 }
 
