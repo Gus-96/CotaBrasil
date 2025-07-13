@@ -45,15 +45,6 @@ app.get('/api/ibovespa', async (req, res) => {
   }
 });
 
-// Configuração para produção - servir frontend React
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, 'frontend/dist')));
-  
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'frontend/dist', 'index.html'));
-  });
-}
-
 // Tratamento de erros global
 app.use((err, req, res, next) => {
   console.error('Erro global:', err.stack);
