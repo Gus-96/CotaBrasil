@@ -3,23 +3,55 @@ import axios from 'axios';
 import { FaArrowUp, FaArrowDown, FaSyncAlt, FaMoon, FaSun } from 'react-icons/fa';
 import useTheme from '../hooks/useTheme';
 
-const formatNumber = (value) => {
+const formatNumber = (value, minDigits = 2, maxDigits = 2) => {
   return new Intl.NumberFormat('pt-BR', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
+    minimumFractionDigits: minDigits,
+    maximumFractionDigits: maxDigits
   }).format(value);
 };
 
-const FinancialCards = () => {
-  const [quotes, setQuotes] = useState({
-    dollar: { price: '--', change: '--', changePercent: '--', updatedAt: '--' },
-    euro: { price: '--', change: '--', changePercent: '--', updatedAt: '--' },
-    peso: { price: '--', change: '--', changePercent: '--', updatedAt: '--' },
-    ibovespa: { points: '--', change: '--', changePercent: '--', updatedAt: '--' },
-    bitcoin: { price: '--', change: '--', changePercent: '--', updatedAt: '--' },
-    nasdaq: { points: '--', change: '--', changePercent: '--', updatedAt: '--' }
+const formatDate = (isoString) => {
+  const date = new Date(isoString);
+  return date.toLocaleTimeString('pt-BR', { 
+    hour: '2-digit', 
+    minute: '2-digit', 
+    second: '2-digit' 
   });
+};
 
+const initialQuotes = {
+  dollar: { price: '--', change: '--', changePercent: '--', updatedAt: '--' },
+  euro: { price: '--', change: '--', changePercent: '--', updatedAt: '--' },
+  peso: { price: '--', change: '--', changePercent: '--', updatedAt: '--' },
+  ibovespa: { points: '--', change: '--', changePercent: '--', updatedAt: '--' },
+  bitcoin: { price: '--', change: '--', changePercent: '--', updatedAt: '--' },
+  nasdaq: { points: '--', change: '--', changePercent: '--', updatedAt: '--' }
+};
+
+const processCurrencyData = (currencyData, currencyKey, isBitcoin = false) => {
+  if (!currencyData || !currencyData[currencyKey]) return initialQuotes[isBitcoin ? 'bitcoin' : 'dollar'];
+  
+  const currency = currencyData[currencyKey];
+  const isPeso = currencyKey === 'ARSBRL';
+  
+  return {
+    price: isPeso 
+      ? parseFloat(currency.bid).toFixed(4).replace('.', ',')
+      : formatNumber(parseFloat(currency.bid)),
+    change: isPeso
+      ? parseFloat(currency.varBid).toFixed(6)
+      : isBitcoin
+        ? formatNumber(parseFloat(currency.varBid))
+        : parseFloat(currency.varBid).toFixed(4),
+    changePercent: isPeso
+      ? parseFloat(currency.pctChange).toFixed(6)
+      : parseFloat(currency.pctChange).toFixed(isBitcoin ? 2 : 4),
+    updatedAt: formatDate(currency.create_date)
+  };
+};
+
+const FinancialCards = () => {
+  const [quotes, setQuotes] = useState(initialQuotes);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { darkMode, toggleTheme } = useTheme();
@@ -29,74 +61,22 @@ const FinancialCards = () => {
       setLoading(true);
       setError(null);
 
-      const formatDate = (isoString) => {
-        const date = new Date(isoString);
-        return date.toLocaleTimeString('pt-BR', { 
-          hour: '2-digit', 
-          minute: '2-digit', 
-          second: '2-digit' 
-        });
-      };
-
-      // API para moedas (incluindo Bitcoin em BRL)
       const currenciesUrl = 'https://economia.awesomeapi.com.br/json/last/USD-BRL,EUR-BRL,ARS-BRL,BTC-BRL';
-      
-      // API para NASDAQ com proxy para evitar CORS
       const nasdaqProxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(
         'https://query1.finance.yahoo.com/v8/finance/chart/%5EIXIC'
       )}`;
 
-      const [
-        currenciesResponse, 
-        ibovespaResponse, 
-        nasdaqResponse
-      ] = await Promise.allSettled([
+      const [currenciesResponse, ibovespaResponse, nasdaqResponse] = await Promise.allSettled([
         axios.get(currenciesUrl),
         axios.get('/api/ibovespa'),
         axios.get(nasdaqProxyUrl)
       ]);
 
-      // Processar dados das moedas
-      let dollarData = { price: '--', change: '--', changePercent: '--', updatedAt: '--' };
-      let euroData = { price: '--', change: '--', changePercent: '--', updatedAt: '--' };
-      let pesoData = { price: '--', change: '--', changePercent: '--', updatedAt: '--' };
-      let bitcoinData = { price: '--', change: '--', changePercent: '--', updatedAt: '--' };
-
-      if (currenciesResponse.status === 'fulfilled') {
-        const currencies = currenciesResponse.value.data;
-        
-        dollarData = {
-          price: formatNumber(parseFloat(currencies.USDBRL.bid)),
-          change: parseFloat(currencies.USDBRL.varBid).toFixed(4),
-          changePercent: parseFloat(currencies.USDBRL.pctChange).toFixed(4),
-          updatedAt: formatDate(currencies.USDBRL.create_date)
-        };
-
-        euroData = {
-          price: formatNumber(parseFloat(currencies.EURBRL.bid)),
-          change: parseFloat(currencies.EURBRL.varBid).toFixed(4),
-          changePercent: parseFloat(currencies.EURBRL.pctChange).toFixed(4),
-          updatedAt: formatDate(currencies.EURBRL.create_date)
-        };
-
-        pesoData = {
-          price: parseFloat(currencies.ARSBRL.bid).toFixed(4).replace('.', ','),
-          change: parseFloat(currencies.ARSBRL.bid - currencies.ARSBRL.ask).toFixed(8),
-          changePercent: parseFloat(currencies.ARSBRL.pctChange).toFixed(6),
-          updatedAt: formatDate(currencies.ARSBRL.create_date)
-        };
-
-        bitcoinData = {
-          price: formatNumber(parseFloat(currencies.BTCBRL.bid)),
-          change: formatNumber(parseFloat(currencies.BTCBRL.varBid)),
-          changePercent: parseFloat(currencies.BTCBRL.pctChange).toFixed(2),
-          updatedAt: formatDate(currencies.BTCBRL.create_date)
-        };
-      }
-
-      // Processar dados do IBOVESPA
-      let ibovespaData = { points: '--', change: '--', changePercent: '--', updatedAt: '--' };
+      // Processar moedas
+      const currencies = currenciesResponse.status === 'fulfilled' ? currenciesResponse.value.data : null;
       
+      // Processar índices
+      let ibovespaData = initialQuotes.ibovespa;
       if (ibovespaResponse.status === 'fulfilled') {
         const ibovespa = ibovespaResponse.value.data;
         ibovespaData = {
@@ -107,9 +87,8 @@ const FinancialCards = () => {
         };
       }
 
-      // Processar dados da NASDAQ
-      let nasdaqData = { points: '--', change: '--', changePercent: '--', updatedAt: '--' };
-      
+      // Processar NASDAQ
+      let nasdaqData = initialQuotes.nasdaq;
       if (nasdaqResponse.status === 'fulfilled') {
         try {
           const nasdaqJson = JSON.parse(nasdaqResponse.value.data.contents);
@@ -129,11 +108,11 @@ const FinancialCards = () => {
       }
 
       setQuotes({
-        dollar: dollarData,
-        euro: euroData,
-        peso: pesoData,
+        dollar: processCurrencyData(currencies, 'USDBRL'),
+        euro: processCurrencyData(currencies, 'EURBRL'),
+        peso: processCurrencyData(currencies, 'ARSBRL'),
+        bitcoin: processCurrencyData(currencies, 'BTCBRL', true),
         ibovespa: ibovespaData,
-        bitcoin: bitcoinData,
         nasdaq: nasdaqData
       });
 
@@ -147,7 +126,7 @@ const FinancialCards = () => {
 
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 300000); // Atualiza a cada 5 minutos
+    const interval = setInterval(fetchData, 300000);
     return () => clearInterval(interval);
   }, []);
 
@@ -162,12 +141,12 @@ const FinancialCards = () => {
   }) => {
     const hasValidVariation = variation !== '--' && !isNaN(parseFloat(variation));
     const hasValidChange = change !== '--' && !isNaN(parseFloat(change));
+    const isPositive = hasValidVariation && parseFloat(variation) >= 0;
+    const textColor = isPositive ? 'text-green-500 dark:text-green-400' : 'text-red-500 dark:text-red-400';
 
     return (
       <div className="relative bg-white dark:bg-dark-100 p-6 rounded-xl shadow-lg dark:shadow-gray-800/50 transition-colors duration-300 min-h-[240px] flex flex-col justify-between">
-        <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-6">
-          {title}
-        </h3>
+        <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-6">{title}</h3>
 
         <div className="flex-grow flex flex-col justify-start space-y-6 pb-10">
           <div className="flex items-end gap-4">
@@ -176,10 +155,8 @@ const FinancialCards = () => {
               {!isCurrency && <span className="text-base ml-1">pts</span>}
             </span>
             {hasValidVariation && (
-              <span className={`flex items-center text-lg font-medium ${
-                parseFloat(variation) >= 0 ? 'text-green-500 dark:text-green-400' : 'text-red-500 dark:text-red-400'
-              }`}>
-                {parseFloat(variation) >= 0 ? <FaArrowUp className="mr-1" /> : <FaArrowDown className="mr-1" />}
+              <span className={`flex items-center text-lg font-medium ${textColor}`}>
+                {isPositive ? <FaArrowUp className="mr-1" /> : <FaArrowDown className="mr-1" />}
                 {Math.abs(parseFloat(variation))}%
               </span>
             )}
@@ -189,8 +166,8 @@ const FinancialCards = () => {
             <div className="text-base text-gray-700 dark:text-gray-300">
               <p>
                 <span className="font-semibold">Variação: </span> 
-                <span className={parseFloat(change) >= 0 ? 'text-green-500 dark:text-green-400' : 'text-red-500 dark:text-red-400'}>
-                  {parseFloat(change) >= 0 ? '+ ' : ' '}
+                <span className={textColor}>
+                  {isPositive ? '+ ' : ' '}
                   {change}{isCurrency ? ` ${currencySymbol}` : ''}
                   {!isCurrency && ' pts'}
                 </span>
