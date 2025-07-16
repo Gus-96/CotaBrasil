@@ -12,6 +12,8 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+app.get('/api/health', (req, res) => res.sendStatus(200));
+
 // Rota para IBOVESPA (Yahoo Finance) - VERSÃO ORIGINAL FUNCIONAL
 app.get('/api/ibovespa', async (req, res) => {
   try {
