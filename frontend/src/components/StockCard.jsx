@@ -268,11 +268,12 @@ const FinancialCards = () => {
             updatedAt={quotes.euro.updatedAt} 
           />
           <QuoteCard 
-            title="Peso Argentino (ARS)" 
-            value={quotes.peso.price} 
-            variation={quotes.peso.changePercent} 
-            change={quotes.peso.change}
-            updatedAt={quotes.peso.updatedAt}
+            title="NASDAQ Composite" 
+            value={quotes.nasdaq.points} 
+            variation={quotes.nasdaq.changePercent} 
+            change={quotes.nasdaq.change}
+            updatedAt={quotes.nasdaq.updatedAt}
+            isCurrency={false}
           />
           <QuoteCard 
             title="Bitcoin (BTC)" 
@@ -282,12 +283,11 @@ const FinancialCards = () => {
             updatedAt={quotes.bitcoin.updatedAt}
           />
           <QuoteCard 
-            title="NASDAQ Composite" 
-            value={quotes.nasdaq.points} 
-            variation={quotes.nasdaq.changePercent} 
-            change={quotes.nasdaq.change}
-            updatedAt={quotes.nasdaq.updatedAt}
-            isCurrency={false}
+            title="Peso Argentino (ARS)" 
+            value={quotes.peso.price} 
+            variation={quotes.peso.changePercent} 
+            change={quotes.peso.change}
+            updatedAt={quotes.peso.updatedAt}
           />
         </div>
       )}
