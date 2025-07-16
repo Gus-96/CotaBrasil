@@ -67,15 +67,15 @@ const FinancialCards = () => {
         
         dollarData = {
           price: formatNumber(parseFloat(currencies.USDBRL.bid)),
-          change: formatNumber(parseFloat(currencies.USDBRL.varBid)),
-          changePercent: parseFloat(currencies.USDBRL.pctChange).toFixed(2),
+          change: parseFloat(currencies.USDBRL.varBid).toFixed(4),
+          changePercent: parseFloat(currencies.USDBRL.pctChange).toFixed(4),
           updatedAt: formatDate(currencies.USDBRL.create_date)
         };
 
         euroData = {
           price: formatNumber(parseFloat(currencies.EURBRL.bid)),
-          change: formatNumber(parseFloat(currencies.EURBRL.varBid)),
-          changePercent: parseFloat(currencies.EURBRL.pctChange).toFixed(2),
+          change: parseFloat(currencies.EURBRL.varBid).toFixed(4),
+          changePercent: parseFloat(currencies.EURBRL.pctChange).toFixed(4),
           updatedAt: formatDate(currencies.EURBRL.create_date)
         };
 
