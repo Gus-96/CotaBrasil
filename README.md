@@ -1,4 +1,4 @@
-<img width="1210" height="648" alt="CotaBrasil" src="https://github.com/user-attachments/assets/728bace4-df1b-41e5-bfb9-f9a62971c31e" />
+<img width="1048" height="635" alt="CotaBrasil" src="https://github.com/user-attachments/assets/c786ed54-4574-4f61-8cc1-0305e69f231a" />
 
 # CotaBrasil - Monitoramento Financeiro em Tempo Real
 
