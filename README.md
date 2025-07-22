@@ -42,3 +42,4 @@ Backend
 - Layout responsivo (Done)
 - Dark mode (Done)
 - Gráficos históricos (To Do)
+- Guardar Histórico de Cotações no Banco de Dados PostgreSQL (To Do)
