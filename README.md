@@ -2,9 +2,13 @@
 
 # CotaBrasil - Monitoramento Financeiro em Tempo Real
 
-O CotaBrasil é uma solução tecnológica completa desenvolvida para acompanhamento em tempo real dos principais indicadores financeiros que impactam o mercado brasileiro e internacional. Este projeto full-stack combina um frontend moderno em React com um backend robusto em Node.js, oferecendo aos usuários uma visão abrangente e atualizada do cenário econômico.
+O CotaBrasil é uma solução tecnológica completa desenvolvida para acompanhamento em tempo real dos principais indicadores financeiros que impactam o mercado brasileiro e internacional. Este projeto full-stack combina um frontend moderno em React com um backend robusto em Java Spring Boot, oferecendo aos usuários uma visão abrangente e atualizada do cenário econômico.
 
 A aplicação destaca-se por sua capacidade de integrar múltiplas fontes de dados financeiros em uma única interface intuitiva. No frontend, desenvolvido com React e Tailwind CSS, os usuários podem visualizar de forma clara e organizada as cotações do dólar, euro, peso argentino e bitcoin, além dos índices IBOVESPA e NASDAQ. O design responsivo garante uma experiência consistente em qualquer dispositivo, enquanto o toggle entre modos claro e escuro proporciona conforto visual personalizável.
+
+### URLs de Produção
+https://cotabrasil-frontend.onrender.com
+
 ## Funcionalidades Principais
 Frontend
 - Cotações em tempo real de moedas (Dólar, Euro, Peso Argentino)
@@ -16,13 +20,12 @@ Frontend
 - Visualização de variações (valor absoluto e percentual)
 
 Backend
-- API RESTful para todos os dados
-- Proxy para evitar problemas de CORS
-- Pronto para deploy em produção (serve frontend buildado)
+- Integração com Yahoo Finance API
 - Tratamento robusto de erros
+- Configuração CORS para produção
+- Health check endpoints
 
 ## Tecnologias Utilizadas
-
 Frontend
 - React.js
 - Tailwind CSS
@@ -31,11 +34,11 @@ Frontend
 - Context API (gerenciamento de tema)
 
 Backend
-- Node.js
-- Express
-- CORS
-- Axios
-- Yahoo Finance API
+- Java 21 - Linguagem de programação
+- Spring Boot 3.2.0 - Framework backend
+- Maven - Gerenciamento de dependências
+- RestTemplate - Consumo de APIs externas
+- Yahoo Finance API - Fonte de dados financeiros
 
 ## Roadmap
 - Integração com APIs financeiras (Done)
