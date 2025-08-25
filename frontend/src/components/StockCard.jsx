@@ -68,7 +68,7 @@ const FinancialCards = () => {
 
       const [currenciesResponse, ibovespaResponse, nasdaqResponse] = await Promise.allSettled([
         axios.get(currenciesUrl),
-        axios.get('/api/ibovespa'),
+        axios.get('https://cotabrasil-backend.onrender.com/api/ibovespa'),
         axios.get(nasdaqProxyUrl)
       ]);
 
