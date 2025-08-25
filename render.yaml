@@ -1,4 +1,5 @@
 services:
+  # BACKEND (Java)
   - type: web
     name: cotabrasil-backend
     plan: free
@@ -8,5 +9,12 @@ services:
     envVars:
       - key: PORT
         value: 5000
-      - key: JAVA_VERSION
-        value: 21
+
+  # FRONTEND (React)
+  - type: static_site
+    name: cotabrasil
+    plan: free
+    region: ohio
+    rootDirectory: frontend
+    buildCommand: npm install && npm run build
+    publishPath: ./dist
