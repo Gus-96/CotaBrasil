@@ -3,6 +3,7 @@ import axios from 'axios';
 import { FaArrowUp, FaArrowDown, FaSyncAlt, FaMoon, FaSun } from 'react-icons/fa';
 import useTheme from '../hooks/useTheme';
 
+// Formata números com opções de casas decimais
 const formatNumber = (value, minDigits = 2, maxDigits = 2) => {
   return new Intl.NumberFormat('pt-BR', {
     minimumFractionDigits: minDigits,
@@ -10,6 +11,7 @@ const formatNumber = (value, minDigits = 2, maxDigits = 2) => {
   }).format(value);
 };
 
+// Formata data/hora para o padrão brasileiro
 const formatDate = (isoString) => {
   const date = new Date(isoString);
   return date.toLocaleTimeString('pt-BR', { 
@@ -19,6 +21,7 @@ const formatDate = (isoString) => {
   });
 };
 
+// Valores iniciais para as cotações
 const initialQuotes = {
   dollar: { price: '--', change: '--', changePercent: '--', updatedAt: '--' },
   euro: { price: '--', change: '--', changePercent: '--', updatedAt: '--' },
@@ -28,6 +31,7 @@ const initialQuotes = {
   nasdaq: { points: '--', change: '--', changePercent: '--', updatedAt: '--' }
 };
 
+// Processa dados de moedas para exibição
 const processCurrencyData = (currencyData, currencyKey, isBitcoin = false) => {
   if (!currencyData || !currencyData[currencyKey]) return initialQuotes[isBitcoin ? 'bitcoin' : 'dollar'];
   
@@ -50,32 +54,36 @@ const processCurrencyData = (currencyData, currencyKey, isBitcoin = false) => {
   };
 };
 
+// Componente principal de cartões financeiros
 const FinancialCards = () => {
-  const [quotes, setQuotes] = useState(initialQuotes);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const { darkMode, toggleTheme } = useTheme();
+  const [quotes, setQuotes] = useState(initialQuotes); // Estado das cotações
+  const [loading, setLoading] = useState(true);        // Estado de carregamento
+  const [error, setError] = useState(null);            // Estado de erro
+  const { darkMode, toggleTheme } = useTheme();        // Hook para tema claro/escuro
 
+  // Função para buscar dados das APIs
   const fetchData = async () => {
     try {
       setLoading(true);
       setError(null);
 
+      // URLs das APIs
       const currenciesUrl = 'https://economia.awesomeapi.com.br/json/last/USD-BRL,EUR-BRL,ARS-BRL,BTC-BRL';
       const nasdaqProxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(
         'https://query1.finance.yahoo.com/v8/finance/chart/%5EIXIC'
       )}`;
 
+      // Busca dados em paralelo
       const [currenciesResponse, ibovespaResponse, nasdaqResponse] = await Promise.allSettled([
         axios.get(currenciesUrl),
         axios.get('https://cotabrasil-backend.onrender.com/api/ibovespa'),
         axios.get(nasdaqProxyUrl)
       ]);
 
-      // Processar moedas
+      // Processa dados de moedas
       const currencies = currenciesResponse.status === 'fulfilled' ? currenciesResponse.value.data : null;
       
-      // Processar índices
+      // Processa dados do Ibovespa
       let ibovespaData = initialQuotes.ibovespa;
       if (ibovespaResponse.status === 'fulfilled') {
         const ibovespa = ibovespaResponse.value.data;
@@ -87,7 +95,7 @@ const FinancialCards = () => {
         };
       }
 
-      // Processar NASDAQ
+      // Processa dados da NASDAQ
       let nasdaqData = initialQuotes.nasdaq;
       if (nasdaqResponse.status === 'fulfilled') {
         try {
@@ -107,6 +115,7 @@ const FinancialCards = () => {
         }
       }
 
+      // Atualiza estado com todos os dados processados
       setQuotes({
         dollar: processCurrencyData(currencies, 'USDBRL'),
         euro: processCurrencyData(currencies, 'EURBRL'),
@@ -124,12 +133,14 @@ const FinancialCards = () => {
     }
   };
 
+  // Busca dados ao montar o componente e a cada 5 minutos
   useEffect(() => {
     fetchData();
     const interval = setInterval(fetchData, 300000);
     return () => clearInterval(interval);
   }, []);
 
+  // Componente interno para cartão de cotação
   const QuoteCard = ({ 
     title, 
     value, 
@@ -185,9 +196,11 @@ const FinancialCards = () => {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
+      {/* Cabeçalho com título e botões */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">Indicadores Financeiros</h2>
         <div className="flex gap-2">
+          {/* Botão para alternar tema claro/escuro */}
           <button
             onClick={toggleTheme}
             className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-dark-200 transition-colors"
@@ -195,6 +208,7 @@ const FinancialCards = () => {
           >
             {darkMode ? <FaSun className="text-yellow-400" /> : <FaMoon className="text-gray-600" />}
           </button>
+          {/* Botão para recarregar dados */}
           <button 
             onClick={fetchData}
             className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 p-2 rounded-full hover:bg-indigo-50 dark:hover:bg-dark-200 transition-colors"
@@ -204,6 +218,7 @@ const FinancialCards = () => {
         </div>
       </div>
 
+      {/* Exibe erro, loading ou os cartões com dados */}
       {error ? (
         <div className="text-center py-4">
           <p className="text-red-500 dark:text-red-400 mb-3">{error}</p>
@@ -215,12 +230,14 @@ const FinancialCards = () => {
           </button>
         </div>
       ) : loading ? (
+        // Placeholders durante o carregamento
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {[...Array(6)].map((_, index) => (
             <div key={index} className="bg-white dark:bg-dark-100 p-4 rounded-lg shadow-md animate-pulse min-h-[200px]"></div>
           ))}
         </div>
       ) : (
+        // Grid com os cartões de cotações
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <QuoteCard 
             title="IBOVESPA (IBOV)" 

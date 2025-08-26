@@ -12,19 +12,21 @@ import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+// Controlador para servir arquivos do frontend
 @Controller
 public class FrontendController {
 
     private final Path frontendPath;
 
     public FrontendController() {
-        // Tenta diferentes caminhos para o frontend
+        // Tenta diferentes caminhos onde o frontend pode estar
         Path[] possiblePaths = {
-            Paths.get("frontend", "dist"),
-            Paths.get("..", "frontend", "dist"),
-            Paths.get(System.getProperty("user.dir"), "frontend", "dist")
+            Paths.get("frontend", "dist"),              // Diretório local
+            Paths.get("..", "frontend", "dist"),        // Diretório irmão
+            Paths.get(System.getProperty("user.dir"), "frontend", "dist") // Caminho absoluto
         };
         
+        // Procura o primeiro caminho que existe
         Path foundPath = null;
         for (Path path : possiblePaths) {
             if (java.nio.file.Files.exists(path)) {
@@ -33,18 +35,21 @@ public class FrontendController {
             }
         }
         
+        // Usa o caminho encontrado ou o diretório atual como fallback
         this.frontendPath = foundPath != null ? foundPath : Paths.get(".");
     }
 
+    // Rota principal - serve o index.html do frontend
     @GetMapping("/")
     public String serveFrontend() {
         if (java.nio.file.Files.exists(frontendPath.resolve("index.html"))) {
-            return "forward:/index.html";
+            return "forward:/index.html";  // Encaminha para o arquivo estático
         } else {
-            return "redirect:/api/health";
+            return "redirect:/api/health"; // Fallback para API se frontend não existir
         }
     }
 
+    // Serve arquivos estáticos do frontend (CSS, JS, imagens, etc.)
     @GetMapping("/{filename:.+}")
     public ResponseEntity<Resource> serveFile(@PathVariable String filename) {
         try {
@@ -54,16 +59,17 @@ public class FrontendController {
             if (resource.exists() && resource.isReadable()) {
                 return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_TYPE, 
-                        getContentType(filename))
+                        getContentType(filename))  // Define content-type apropriado
                     .body(resource);
             } else {
-                return ResponseEntity.notFound().build();
+                return ResponseEntity.notFound().build();  // Arquivo não encontrado
             }
         } catch (MalformedURLException e) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.notFound().build();  // URL mal formada
         }
     }
     
+    // Determina o tipo de conteúdo baseado na extensão do arquivo
     private String getContentType(String filename) {
         if (filename.endsWith(".html")) return "text/html";
         if (filename.endsWith(".css")) return "text/css";
@@ -72,6 +78,6 @@ public class FrontendController {
         if (filename.endsWith(".jpg") || filename.endsWith(".jpeg")) return "image/jpeg";
         if (filename.endsWith(".gif")) return "image/gif";
         if (filename.endsWith(".svg")) return "image/svg+xml";
-        return "application/octet-stream";
+        return "application/octet-stream";  // Tipo genérico para outros arquivos
     }
 }
