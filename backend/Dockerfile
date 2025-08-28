@@ -1,21 +1,17 @@
-# Use a imagem oficial do OpenJDK 21
-FROM eclipse-temurin:21-jdk-alpine
-
-# Defina o diretório de trabalho dentro do container
+# Build stage
+FROM eclipse-temurin:21-jdk-alpine as builder
 WORKDIR /app
+COPY . .
+RUN ./mvnw clean package -DskipTests
 
-# Copie primeiro o pom.xml para aproveitar cache do Maven
-COPY pom.xml .
+# Runtime stage
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+COPY --from=builder /app/target/backend-1.0.0.jar app.jar
 
-# Copie o código fonte
-COPY src ./src
-
-# Instale o Maven e construa a aplicação
-RUN apk add --no-cache maven && \
-    mvn clean package -DskipTests
-
-# Exponha a porta que sua aplicação usa
+# Configurações importantes para Render
 EXPOSE 5000
+ENV JAVA_OPTS="-Xmx256m -Xss512k -Dserver.port=5000"
 
-# Comando para executar a aplicação
-ENTRYPOINT ["java", "--enable-native-access=ALL-UNNAMED", "-jar", "target/backend-1.0.0.jar"]
+# Entrypoint simplificado
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

@@ -1,12 +1,27 @@
-name: Keep Node.js Backend Alive
+name: Keep Java Backend Alive
 on:
   schedule:
-    - cron: '*/5 * * * *'  # A cada 5 minutos
+    - cron: '*/5 * * * *'  # A cada 5 minutos (Render free permite até 5min)
+  workflow_dispatch:  # Permite execução manual
+
 jobs:
   ping-backend:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping Backend
+      - name: Ping Java Backend Health
         run: |
-          curl -s "https://cotabrasil.onrender.com/api/health" > /dev/null
-          echo "Backend acordado!"
+          echo "Acordando backend Java..."
+          curl -s -X GET "https://cotabrasil-backend.onrender.com/api/health" \
+          -H "Accept: application/json" \
+          -H "Content-Type: application/json" \
+          --max-time 30
+          echo "Backend Java acordado com sucesso!"
+
+      - name: Ping Ibovespa Endpoint (opcional)
+        run: |
+          echo "Testando endpoint Ibovespa..."
+          curl -s -X GET "https://cotabrasil-backend.onrender.com/api/ibovespa" \
+          -H "Accept: application/json" \
+          -H "Content-Type: application/json" \
+          --max-time 30
+          echo "Endpoint Ibovespa respondendo!"

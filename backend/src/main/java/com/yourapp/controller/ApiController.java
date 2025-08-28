@@ -21,7 +21,7 @@ public class ApiController {
     // Endpoint simples para verificar se a API está funcionando
     @GetMapping("/health")
     public ResponseEntity<String> health() {
-        return ResponseEntity.ok("OK");  // Retorna "OK" se a API estiver ativa
+        return ResponseEntity.ok("Backend Java está funcionando!");  // Retorna "OK" se a API estiver ativa
     }
 
     // Endpoint para obter dados da IBOVESPA
