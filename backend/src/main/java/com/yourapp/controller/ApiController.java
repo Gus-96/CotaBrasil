@@ -39,4 +39,23 @@ public class ApiController {
             ));
         }
     }
+
+    // No seu Controller Java
+    @GetMapping("/api/nasdaq")
+    public ResponseEntity<String> getNasdaq() {
+        try {
+            URL url = new URL("https://query1.finance.yahoo.com/v8/finance/chart/%5EIXIC");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            
+            BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            String response = reader.lines().collect(Collectors.joining());
+            reader.close();
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error fetching NASDAQ data");
+        }
+    }
+
 }
