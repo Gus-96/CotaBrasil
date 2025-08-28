@@ -61,20 +61,27 @@ const fetchNasdaqData = async () => {
       timeout: 8000 
     });
     
-    // Processa os dados brutos do Yahoo Finance
-    if (response.data && response.data.chart && response.data.chart.result[0]) {
-      const meta = response.data.chart.result[0].meta;
-      const currentPrice = meta.regularMarketPrice;
-      const previousClose = meta.chartPreviousClose;
-      const change = currentPrice - previousClose;
-      const changePercent = (change / previousClose) * 100;
-      const timestamp = new Date(meta.regularMarketTime * 1000);
+    console.log('NASDAQ API Response:', response.data); // DEBUG
+    
+    if (response.data && response.data.points) {
+      // Converte números de formato brasileiro para internacional
+      const points = parseFloat(response.data.points.replace(',', '.'));
+      const change = parseFloat(response.data.change.replace(',', '.'));
+      const changePercent = parseFloat(response.data.changePercent);
+      
+      // Converte a data para formato de hora apenas
+      const date = new Date(response.data.updatedAt);
+      const updatedAt = date.toLocaleTimeString('pt-BR', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
       
       return {
-        points: formatNumber(currentPrice, 2, 2),
+        points: formatNumber(points, 2, 2),
         change: formatNumber(change, 2, 2),
         changePercent: changePercent.toFixed(2),
-        updatedAt: timestamp.toLocaleTimeString('pt-BR')
+        updatedAt: updatedAt
       };
     }
     

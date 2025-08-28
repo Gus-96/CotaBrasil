@@ -26,7 +26,6 @@ public class YahooFinanceService {
     public Map<String, Object> getIbovespaData() {
         // Lista de símbolos alternativos para o IBOVESPA
         String[] symbols = {
-            "%5EBVSP",      // URL encoded ^BVSP
             "^BVSP",        // Símbolo direto
             "BVSP",         // Sem o ^
             "%5EIBOV",      // ^IBOV
