@@ -7,7 +7,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 // Controlador REST para endpoints da API
 @RestController
@@ -40,8 +45,8 @@ public class ApiController {
         }
     }
 
-    // No seu Controller Java
-    @GetMapping("/api/nasdaq")
+    // Endpoint para obter dados da NASDAQ
+    @GetMapping("/nasdaq")
     public ResponseEntity<String> getNasdaq() {
         try {
             URL url = new URL("https://query1.finance.yahoo.com/v8/finance/chart/%5EIXIC");
@@ -57,5 +62,4 @@ public class ApiController {
             return ResponseEntity.status(500).body("Error fetching NASDAQ data");
         }
     }
-
 }
