@@ -56,58 +56,23 @@ const processCurrencyData = (currencyData, currencyKey, isBitcoin = false) => {
 
 // Função dedicada para buscar dados da NASDAQ
 const fetchNasdaqData = async () => {
-  const proxies = [
-    'https://api.codetabs.com/v1/proxy?quest=https://query1.finance.yahoo.com/v8/finance/chart/%5EIXIC',
-    'https://cors-anywhere.herokuapp.com/https://query1.finance.yahoo.com/v8/finance/chart/%5EIXIC',
-    'https://proxy.cors.sh/https://query1.finance.yahoo.com/v8/finance/chart/%5EIXIC'
-  ];
-
-  // Tenta cada proxy sequencialmente
-  for (const proxyUrl of proxies) {
-    try {
-      const response = await axios.get(proxyUrl, { timeout: 4000 });
-      const data = response.data;
-      
-      if (data.chart?.result?.[0]?.meta) {
-        const meta = data.chart.result[0].meta;
-        const previousClose = meta.chartPreviousClose;
-        const currentPrice = meta.regularMarketPrice;
-        
-        return {
-          points: formatNumber(currentPrice),
-          change: formatNumber(currentPrice - previousClose),
-          changePercent: ((currentPrice - previousClose) / previousClose * 100).toFixed(2),
-          updatedAt: new Date(meta.regularMarketTime * 1000).toLocaleTimeString('pt-BR')
-        };
-      }
-    } catch (error) {
-      console.warn(`Proxy falhou: ${proxyUrl}`, error);
-      continue;
-    }
-  }
-
-  // Fallback para API alternativa se todos os proxies falharem
   try {
-    const fallbackResponse = await axios.get(
-      'https://financialmodelingprep.com/api/v3/quote/%5EIXIC?apikey=demo',
-      { timeout: 3000 }
-    );
+    const response = await axios.get('https://cotabrasil-backend.onrender.com/api/nasdaq', { 
+      timeout: 8000 
+    });
     
-    if (fallbackResponse.data[0]) {
-      const stock = fallbackResponse.data[0];
-      return {
-        points: formatNumber(stock.price),
-        change: formatNumber(stock.change),
-        changePercent: stock.changesPercentage.toFixed(2),
-        updatedAt: new Date(stock.timestamp).toLocaleTimeString('pt-BR')
-      };
+    // Se seu backend já retornar os dados formatados
+    if (response.data) {
+      return response.data;
     }
-  } catch (fallbackError) {
-    console.warn('Fallback também falhou:', fallbackError);
+    
+    // Fallback se necessário
+    return initialQuotes.nasdaq;
+    
+  } catch (error) {
+    console.warn('Erro ao buscar NASDAQ do backend:', error);
+    return initialQuotes.nasdaq;
   }
-
-  // Retorna valores padrão se tudo falhar
-  return initialQuotes.nasdaq;
 };
 
 // Componente principal de cartões financeiros
@@ -119,67 +84,49 @@ const FinancialCards = () => {
 
   // Função para buscar dados das APIs
   const fetchData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  try {
+    setLoading(true);
+    setError(null);
 
-      // URLs das APIs principais
-      const currenciesUrl = 'https://economia.awesomeapi.com.br/json/last/USD-BRL,EUR-BRL,ARS-BRL,BTC-BRL';
-      
-      // Configuração de timeout para melhor performance
-      const timeoutConfig = { timeout: 8000 };
+    // URLs das APIs - tudo através do seu backend
+    const endpoints = [
+      axios.get('https://cotabrasil-backend.onrender.com/api/ibovespa', { timeout: 8000 }),
+      axios.get('https://economia.awesomeapi.com.br/json/last/USD-BRL,EUR-BRL,ARS-BRL,BTC-BRL', { timeout: 8000 }),
+      fetchNasdaqData() // Agora usando seu backend
+    ];
 
-      // Busca dados principais em paralelo (exceto NASDAQ)
-      const [currenciesResponse, ibovespaResponse] = await Promise.allSettled([
-        axios.get(currenciesUrl, timeoutConfig),
-        axios.get('https://cotabrasil-backend.onrender.com/api/ibovespa', timeoutConfig)
-      ]);
+    const [ibovespaResponse, currenciesResponse, nasdaqData] = await Promise.allSettled(endpoints);
 
-      // Busca NASDAQ separadamente para não bloquear outras cotações
-      let nasdaqData = initialQuotes.nasdaq;
-      try {
-        nasdaqData = await fetchNasdaqData();
-      } catch (nasdaqError) {
-        console.warn('NASDAQ não carregou:', nasdaqError);
-        // Mantém valores padrão sem quebrar a aplicação
-      }
-
-      // Processa dados de moedas
-      const currencies = currenciesResponse.status === 'fulfilled' ? currenciesResponse.value.data : null;
-      
-      // Processa dados do Ibovespa
-      let ibovespaData = initialQuotes.ibovespa;
-      if (ibovespaResponse.status === 'fulfilled') {
-        const ibovespa = ibovespaResponse.value.data;
-        ibovespaData = {
-          points: formatNumber(parseFloat(ibovespa.points)),
-          change: formatNumber(parseFloat(ibovespa.change)),
-          changePercent: parseFloat(ibovespa.changePercent).toFixed(2),
-          updatedAt: new Date(ibovespa.updatedAt).toLocaleTimeString('pt-BR')
-        };
-      }
-
-      // Atualiza estado com todos os dados processados
-      setQuotes({
-        dollar: processCurrencyData(currencies, 'USDBRL'),
-        euro: processCurrencyData(currencies, 'EURBRL'),
-        peso: processCurrencyData(currencies, 'ARSBRL'),
-        bitcoin: processCurrencyData(currencies, 'BTCBRL', true),
-        ibovespa: ibovespaData,
-        nasdaq: nasdaqData
-      });
-
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      if (error.code === 'ECONNABORTED') {
-        setError('Tempo de resposta excedido. Tente novamente.');
-      } else {
-        setError('Erro ao carregar cotações. Tente novamente.');
-      }
-    } finally {
-      setLoading(false);
+    // Processa dados (mantenha sua lógica atual)
+    const currencies = currenciesResponse.status === 'fulfilled' ? currenciesResponse.value.data : null;
+    
+    let ibovespaProcessed = initialQuotes.ibovespa;
+    if (ibovespaResponse.status === 'fulfilled') {
+      const ibovespa = ibovespaResponse.value.data;
+      ibovespaProcessed = {
+        points: formatNumber(parseFloat(ibovespa.points)),
+        change: formatNumber(parseFloat(ibovespa.change)),
+        changePercent: parseFloat(ibovespa.changePercent).toFixed(2),
+        updatedAt: new Date(ibovespa.updatedAt).toLocaleTimeString('pt-BR')
+      };
     }
-  };
+
+    setQuotes({
+      dollar: processCurrencyData(currencies, 'USDBRL'),
+      euro: processCurrencyData(currencies, 'EURBRL'),
+      peso: processCurrencyData(currencies, 'ARSBRL'),
+      bitcoin: processCurrencyData(currencies, 'BTCBRL', true),
+      ibovespa: ibovespaProcessed,
+      nasdaq: nasdaqData.status === 'fulfilled' ? nasdaqData.value : initialQuotes.nasdaq
+    });
+
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    setError('Erro ao carregar cotações. Tente novamente.');
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Busca dados ao montar o componente e a cada 5 minutos
   useEffect(() => {
