@@ -5,8 +5,23 @@
 /* Transição suave para o dark mode */
 @layer base {
   body {
-    @apply transition-colors duration-300;
+    @apply transition-colors duration-1000 ease-in-out;
   }
+}
+
+/* Light mode - Fundo cinza claro */
+body {
+  background-color: #ffc40033;
+}
+
+/* Dark mode - Fundo escuro */
+.dark {
+  color-scheme: dark;
+}
+
+.dark body {
+  background-color: #111827;
+  color: #797979;
 }
 
 /* Animação de pulse personalizada */

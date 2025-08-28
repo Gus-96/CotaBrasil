@@ -1,27 +1,32 @@
 import { useState, useEffect } from 'react';
 
 export default function useTheme() {
-  const [darkMode, setDarkMode] = useState(true); // Alterado para true como padrão
-
-  useEffect(() => {
-    // Verifica se há preferência salva, caso contrário mantém dark mode ativo
+  const [darkMode, setDarkMode] = useState(() => {
+    // Verifica se há preferência salva no localStorage
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme) {
-      setDarkMode(savedTheme === 'dark');
+      return savedTheme === 'dark';
     }
-  }, []);
+    // Verifica a preferência do sistema
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
 
   useEffect(() => {
+    // Aplica a classe dark no elemento html
+    const html = document.documentElement;
+    
     if (darkMode) {
-      document.documentElement.classList.add('dark');
+      html.classList.add('dark');
       localStorage.setItem('theme', 'dark');
     } else {
-      document.documentElement.classList.remove('dark');
+      html.classList.remove('dark');
       localStorage.setItem('theme', 'light');
     }
   }, [darkMode]);
 
-  const toggleTheme = () => setDarkMode(!darkMode);
+  const toggleTheme = () => {
+    setDarkMode(prev => !prev);
+  };
 
   return { darkMode, toggleTheme };
 }
