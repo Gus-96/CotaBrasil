@@ -45,37 +45,46 @@ public class ApiController {
     }
 
     @GetMapping("/nasdaq")
-    public ResponseEntity<String> getNasdaq() {
+    public ResponseEntity<Map<String, Object>> getNasdaq() {
         try {
             URL url = new URL("https://query1.finance.yahoo.com/v8/finance/chart/%5EIXIC");
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
-            conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
-            conn.setConnectTimeout(10000);
-            conn.setReadTimeout(10000);
-            
-            logger.info("Tentando conectar com Yahoo Finance...");
-            logger.info("Response Code: " + conn.getResponseCode());
-            logger.info("Response Message: " + conn.getResponseMessage());
-            
-            if (conn.getResponseCode() != 200) {
-                BufferedReader errorReader = new BufferedReader(new InputStreamReader(conn.getErrorStream()));
-                String errorResponse = errorReader.lines().collect(Collectors.joining());
-                errorReader.close();
-                logger.error("Erro HTTP: " + errorResponse);
-                return ResponseEntity.status(500).body("Error from Yahoo API: " + conn.getResponseCode());
-            }
+            conn.setRequestProperty("User-Agent", "Mozilla/5.0");
             
             BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
             String response = reader.lines().collect(Collectors.joining());
             reader.close();
             
-            logger.info("Dados recebidos com sucesso");
-            return ResponseEntity.ok(response);
+            // Parse do JSON
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode rootNode = objectMapper.readTree(response);
+            
+            // Extrai dados necessários
+            JsonNode metaNode = rootNode.path("chart").path("result").get(0).path("meta");
+            double currentPrice = metaNode.path("regularMarketPrice").asDouble();
+            double previousClose = metaNode.path("chartPreviousClose").asDouble();
+            long timestamp = metaNode.path("regularMarketTime").asLong() * 1000;
+            
+            // Calcula variações
+            double change = currentPrice - previousClose;
+            double changePercent = (change / previousClose) * 100;
+            
+            // Formata resposta
+            Map<String, Object> processedData = Map.of(
+                "points", String.format("%.2f", currentPrice).replace(".", ","),
+                "change", String.format("%.2f", change).replace(".", ","),
+                "changePercent", String.format("%.2f", changePercent),
+                "updatedAt", new Date(timestamp).toString()
+            );
+            
+            return ResponseEntity.ok(processedData);
             
         } catch (Exception e) {
-            logger.error("Erro detalhado ao buscar NASDAQ", e);
-            return ResponseEntity.status(500).body("Error fetching NASDAQ data: " + e.getMessage());
+            return ResponseEntity.status(500).body(Map.of(
+                "error", "Error fetching NASDAQ data",
+                "details", e.getMessage()
+            ));
         }
     }
 }
