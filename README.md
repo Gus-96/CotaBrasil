@@ -1,4 +1,4 @@
-<img width="1030" height="595" alt="Captura de Tela 2025-08-17 às 18 21 56" src="https://github.com/user-attachments/assets/065b4828-5ee9-46a9-b4c1-4ebe02cae9d3" />
+<img width="1195" height="632" alt="Captura de Tela 2025-08-29 às 15 42 00" src="https://github.com/user-attachments/assets/0ab845d2-7196-455d-a0be-260ba3c63215" />
 
 # CotaBrasil - Monitoramento Financeiro em Tempo Real
 
