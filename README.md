@@ -7,7 +7,7 @@ O CotaBrasil é uma solução tecnológica completa desenvolvida para acompanham
 A aplicação destaca-se por sua capacidade de integrar múltiplas fontes de dados financeiros em uma única interface intuitiva. No frontend, desenvolvido com React e Tailwind CSS, os usuários podem visualizar de forma clara e organizada as cotações do dólar, euro, peso argentino e bitcoin, além dos índices IBOVESPA e NASDAQ. O design responsivo garante uma experiência consistente em qualquer dispositivo, enquanto o toggle entre modos claro e escuro proporciona conforto visual personalizável.
 
 ### URLs de Produção
-https://cotabrasil-frontend.onrender.com
+https://cotabrasil.onrender.com
 
 ## Funcionalidades Principais
 Frontend
